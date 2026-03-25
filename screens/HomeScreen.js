@@ -9,6 +9,7 @@ import {
   TextInput,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
+import BlogCard from "../components/BlogCard";
 import ProductCard from "../components/ProductCard";
 
 const CATEGORY_ID_MAP = {
@@ -32,6 +33,9 @@ const CATEGORY_LABELS = {
   snowgear: "SnowGear",
   jackets: "Jackets",
   shoes: "Shoes",
+};
+const BLOG_CATEGORY_PREFIX_MAP = {
+  "50c6": "ski",
 };
 
 const normalizeCategory = (value) => {
@@ -62,6 +66,25 @@ const normalizeCategory = (value) => {
   }
 
   return normalizedValue.replace(/\s+/g, "");
+};
+
+const getBlogCategory = (fieldData = {}) => {
+  const value = fieldData.catogory || fieldData.category || "";
+  const normalizedValue = String(value).trim().toLowerCase();
+
+  if (!normalizedValue) {
+    return "";
+  }
+
+  const prefixMatch = Object.entries(BLOG_CATEGORY_PREFIX_MAP).find(([prefix]) =>
+    normalizedValue.startsWith(prefix)
+  );
+
+  if (prefixMatch) {
+    return prefixMatch[1];
+  }
+
+  return normalizeCategory(normalizedValue);
 };
 
 const getCategoryFromFieldData = (fieldData = {}) => {
@@ -95,9 +118,12 @@ const getCategoryFromFieldData = (fieldData = {}) => {
 const HomeScreen = ({ navigation }) => {
   const [isEnabled, setIsEnabled] = useState(false);
   const [products, setProducts] = useState([]);
+  const [blogs, setBlogs] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedBlogCategory, setSelectedBlogCategory] = useState("");
   const [loadError, setLoadError] = useState("");
+  const [blogLoadError, setBlogLoadError] = useState("");
 
   const toggleSwitch = () => setIsEnabled((current) => !current);
 
@@ -153,9 +179,54 @@ const HomeScreen = ({ navigation }) => {
       });
   }, []);
 
+  useEffect(() => {
+    fetch("https://api.webflow.com/v2/collections/699ef9252337becba2eef158/items/live", {
+      headers: {
+        Authorization:
+          "Bearer 15f5cc4a3d900c636f9056e192ae2d4d1faac7747ed954c777cd936c08fa9060",
+      },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Webflow blog request failed: ${response.status}`);
+        }
+
+        return response.json();
+      })
+      .then((data) => {
+        const mappedBlogs = (data.items || []).map((item) => {
+          const fieldData = item.fieldData || {};
+
+          return {
+            id: item.id,
+            title: fieldData.name || "Untitled blog",
+            excerpt: fieldData["post-summary"] || "",
+            image: fieldData["thumbnail-image"]?.url
+              ? { uri: fieldData["thumbnail-image"].url }
+              : fieldData["main-image"]?.url
+                ? { uri: fieldData["main-image"].url }
+                : undefined,
+            category: getBlogCategory(fieldData),
+            body: fieldData["post-body"] || "",
+          };
+        });
+
+        setBlogs(mappedBlogs);
+        setBlogLoadError("");
+      })
+      .catch((error) => {
+        console.error("Error fetching blogs:", error);
+        setBlogLoadError("Webflow blogs could not be loaded.");
+      });
+  }, []);
+
   const availableCategories = useMemo(() => {
     return [...new Set(products.map((product) => product.category).filter(Boolean))];
   }, [products]);
+
+  const availableBlogCategories = useMemo(() => {
+    return [...new Set(blogs.map((blog) => blog.category).filter(Boolean))];
+  }, [blogs]);
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
@@ -169,6 +240,17 @@ const HomeScreen = ({ navigation }) => {
       return matchesCategory && matchesSearch && matchesPromotion;
     });
   }, [isEnabled, products, searchQuery, selectedCategory]);
+
+  const filteredBlogs = useMemo(() => {
+    return blogs.filter((blog) => {
+      const matchesCategory =
+        !selectedBlogCategory || blog.category === selectedBlogCategory;
+      const matchesSearch =
+        !searchQuery || blog.title.toLowerCase().includes(searchQuery.toLowerCase());
+
+      return matchesCategory && matchesSearch;
+    });
+  }, [blogs, searchQuery, selectedBlogCategory]);
 
   return (
     <View style={styles.container}>
@@ -232,6 +314,47 @@ const HomeScreen = ({ navigation }) => {
             No products found for this category.
           </Text>
         ) : null}
+
+        <Text style={styles.sectionHeading}>Latest blogs</Text>
+
+        <View style={styles.pickerWrapWide}>
+          <Picker
+            selectedValue={selectedBlogCategory}
+            onValueChange={setSelectedBlogCategory}
+            dropdownIconColor="#fff"
+            style={styles.picker}
+          >
+            <Picker.Item label="All Blog Categories" value="" />
+            {availableBlogCategories.map((category) => (
+              <Picker.Item
+                key={category}
+                label={CATEGORY_LABELS[category] || category}
+                value={category}
+              />
+            ))}
+          </Picker>
+        </View>
+
+        {blogLoadError ? <Text style={styles.notice}>{blogLoadError}</Text> : null}
+
+        <View style={styles.blogList}>
+          {filteredBlogs.map((blog) => (
+            <BlogCard
+              key={blog.id}
+              title={blog.title}
+              excerpt={blog.excerpt}
+              image={blog.image}
+              category={CATEGORY_LABELS[blog.category] || blog.category}
+              onPress={() => navigation.navigate("BlogDetail", { blog })}
+            />
+          ))}
+        </View>
+
+        {filteredBlogs.length === 0 ? (
+          <Text style={styles.emptyState}>
+            No blogs found for this category.
+          </Text>
+        ) : null}
       </ScrollView>
 
       <StatusBar style="auto" />
@@ -287,8 +410,27 @@ const styles = StyleSheet.create({
     backgroundColor: "#111",
     marginBottom: 12,
   },
+  pickerWrapWide: {
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#555",
+    backgroundColor: "#111",
+    marginBottom: 12,
+    marginTop: 8,
+  },
   picker: {
     color: "#fff",
+  },
+  sectionHeading: {
+    color: "#fff",
+    fontSize: 24,
+    fontWeight: "700",
+    width: "100%",
+    marginTop: 20,
+    marginBottom: 12,
+  },
+  blogList: {
+    width: "100%",
   },
   emptyState: {
     color: "#fff",
