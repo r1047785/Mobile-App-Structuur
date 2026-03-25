@@ -17,6 +17,7 @@ const CATEGORY_ID_MAP = {
   "69b0772f82bad9c4b0615bf2": "snowgear",
   "69b08ea68256760231b6697f": "ski",
   "69aec47adc4d63ec15714677": "snowboard",
+  fb1826afcfbfdf2e34b93317390aac07: "jackets",
 };
 
 const CATEGORY_LABELS = {
@@ -51,6 +52,7 @@ const normalizeCategory = (value) => {
 
 const getCategoryFromFieldData = (fieldData = {}) => {
   const possibleFields = [
+    fieldData["catogory-filter-system-2"],
     fieldData["catogory-filter-system"],
     fieldData["category-filter-system"],
     fieldData.category,
@@ -76,9 +78,9 @@ const getCategoryFromFieldData = (fieldData = {}) => {
   return "";
 };
 
-const HomeScreen = ({ navigation, route }) => {
+const HomeScreen = ({ navigation }) => {
   const [isEnabled, setIsEnabled] = useState(false);
-  const [products, setProducts] = useState(route.params?.fallbackProducts || []);
+  const [products, setProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [loadError, setLoadError] = useState("");
@@ -86,7 +88,7 @@ const HomeScreen = ({ navigation, route }) => {
   const toggleSwitch = () => setIsEnabled((current) => !current);
 
   useEffect(() => {
-    fetch("https://api.webflow.com/v2/sites/:site_id/products", {
+    fetch("https://api.webflow.com/v2/sites/698c7fb74e0026bc0710b917/products", {
       headers: {
         Authorization:
           "Bearer 15f5cc4a3d900c636f9056e192ae2d4d1faac7747ed954c777cd936c08fa9060",
@@ -126,7 +128,7 @@ const HomeScreen = ({ navigation, route }) => {
           setProducts(mappedProducts);
           setLoadError("");
         } else {
-          setLoadError("Webflow returned no products, fallback data is shown.");
+          setLoadError("Webflow returned no products.");
         }
       })
       .catch((error) => {
@@ -135,7 +137,7 @@ const HomeScreen = ({ navigation, route }) => {
           "Webflow products could not be loaded. Check your site ID and API token."
         );
       });
-  }, [route.params?.fallbackProducts]);
+  }, []);
 
   const availableCategories = useMemo(() => {
     return [...new Set(products.map((product) => product.category).filter(Boolean))];
@@ -206,6 +208,7 @@ const HomeScreen = ({ navigation, route }) => {
             description={product.subtitle}
             price={product.price}
             image={product.image}
+            category={product.category}
             onPress={() => navigation.navigate("Details", product)}
           />
         ))}

@@ -12,6 +12,13 @@ import {
 const ProductDetail = ({ route, navigation }) => {
   const { product } = route.params || {};
   const [quantity, setQuantity] = useState(1);
+  const categoryLabel = product?.category
+    ? product.category.charAt(0).toUpperCase() + product.category.slice(1)
+    : "Product";
+  const formattedPrice =
+    typeof product?.price === "number"
+      ? `EUR ${product.price.toFixed(2)}`
+      : product?.price || "EUR 199";
 
   const decreaseQuantity = () =>
     setQuantity((current) => Math.max(1, current - 1));
@@ -31,20 +38,19 @@ const ProductDetail = ({ route, navigation }) => {
       />
 
       <View style={styles.card}>
-        <Text style={styles.label}>Device overview</Text>
-        <Text style={styles.title}>{product?.title || "Tech gadget"}</Text>
-        <Text style={styles.price}>{product?.price || "EUR 199"}</Text>
+        <Text style={styles.label}>{categoryLabel}</Text>
+        <Text style={styles.title}>{product?.title || "Product"}</Text>
+        <Text style={styles.price}>{formattedPrice}</Text>
 
         <Text style={styles.sectionTitle}>Beschrijving</Text>
         <Text style={styles.description}>
-          {product?.description || "Compacte gadget met slimme features."}
+          {product?.description || "Productbeschrijving niet beschikbaar."}
         </Text>
 
         <View style={styles.infoBox}>
-          <Text style={styles.infoTitle}>Specs & highlights</Text>
+          <Text style={styles.infoTitle}>Productdetails</Text>
           <Text style={styles.infoText}>
-            {product?.details ||
-              "Ontworpen voor dagelijkse tech-liefhebbers die stijl en prestaties willen combineren."}
+            {product?.details || "Extra productinformatie niet beschikbaar."}
           </Text>
         </View>
 
@@ -66,17 +72,17 @@ const ProductDetail = ({ route, navigation }) => {
 
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Battery</Text>
-            <Text style={styles.statValue}>All day</Text>
+            <Text style={styles.statLabel}>Categorie</Text>
+            <Text style={styles.statValue}>{categoryLabel}</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Sync</Text>
-            <Text style={styles.statValue}>Instant</Text>
+            <Text style={styles.statLabel}>Aantal</Text>
+            <Text style={styles.statValue}>{quantity}</Text>
           </View>
         </View>
 
         <Pressable style={styles.buyButton}>
-          <Text style={styles.buyButtonText}>Add to cart</Text>
+          <Text style={styles.buyButtonText}>Toevoegen aan winkelwagen</Text>
         </Pressable>
       </View>
     </ScrollView>
