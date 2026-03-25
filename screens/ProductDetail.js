@@ -26,7 +26,7 @@ const ProductDetail = ({ route, navigation }) => {
       </Pressable>
 
       <Image
-        source={product?.image || require("../assets/ring.png")}
+        source={product?.image || require("../assets/icon.png")}
         style={styles.image}
       />
 

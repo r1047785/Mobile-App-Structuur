@@ -8,6 +8,7 @@ export default function ProductCard({
   price,
   image,
   details,
+  onPress,
 }) {
   const navigation = useNavigation();
 
@@ -16,7 +17,7 @@ export default function ProductCard({
       <View style={styles.visualWrap}>
         <Text style={styles.visualTag}>GADGET</Text>
         <Image
-          source={image || require("../assets/ring.png")}
+          source={image || require("../assets/icon.png")}
           style={styles.image}
         />
       </View>
@@ -29,10 +30,12 @@ export default function ProductCard({
 
         <Pressable
           style={styles.button}
-          onPress={() =>
-            navigation.navigate("Details", {
-              product: { title, description, price, image, details },
-            })
+          onPress={
+            onPress ||
+            (() =>
+              navigation.navigate("Details", {
+                product: { title, description, price, image, details },
+              }))
           }
         >
           <Text style={styles.buttonText}>Open details</Text>

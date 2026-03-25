@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -8,23 +8,81 @@ import {
   Switch,
   TextInput,
 } from "react-native";
-import ProductCard from "../components/ProductCard";
-import BlogCard from "../components/BlogCard";
 import { Picker } from "@react-native-picker/picker";
+import ProductCard from "../components/ProductCard";
 
-const categoryNames = {
+const CATEGORY_ID_MAP = {
   "69b08ea68256760231b6697c": "jackets",
   "69b08bd147e3f7afe5f40953": "shoes",
   "69b0772f82bad9c4b0615bf2": "snowgear",
-  "69b08ea68256760231b6697f": "skii",
+  "69b08ea68256760231b6697f": "ski",
   "69aec47adc4d63ec15714677": "snowboard",
+};
+
+const CATEGORY_LABELS = {
+  snowboard: "Snowboard",
+  ski: "Ski",
+  snowgear: "SnowGear",
+  jackets: "Jackets",
+  shoes: "Shoes",
+};
+
+const normalizeCategory = (value) => {
+  if (!value) {
+    return "";
+  }
+
+  const normalizedValue = String(value).trim().toLowerCase();
+
+  if (CATEGORY_ID_MAP[normalizedValue]) {
+    return CATEGORY_ID_MAP[normalizedValue];
+  }
+
+  if (normalizedValue === "skii") {
+    return "ski";
+  }
+
+  if (normalizedValue === "snow gear") {
+    return "snowgear";
+  }
+
+  return normalizedValue.replace(/\s+/g, "");
+};
+
+const getCategoryFromFieldData = (fieldData = {}) => {
+  const possibleFields = [
+    fieldData["catogory-filter-system"],
+    fieldData["category-filter-system"],
+    fieldData.category,
+    fieldData.categories,
+  ];
+
+  for (const field of possibleFields) {
+    if (Array.isArray(field) && field.length > 0) {
+      const category = normalizeCategory(field[0]);
+      if (category) {
+        return category;
+      }
+    }
+
+    if (typeof field === "string" && field.trim()) {
+      const category = normalizeCategory(field);
+      if (category) {
+        return category;
+      }
+    }
+  }
+
+  return "";
 };
 
 const HomeScreen = ({ navigation }) => {
   const [isEnabled, setIsEnabled] = useState(false);
   const [products, setProducts] = useState([]);
-  const toggleSwitch = () => setIsEnabled(!isEnabled);
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
+
+  const toggleSwitch = () => setIsEnabled((current) => !current);
 
   useEffect(() => {
     fetch("https://api.webflow.com/v2/sites/:site_id/products", {
@@ -34,44 +92,65 @@ const HomeScreen = ({ navigation }) => {
       },
     })
       .then((response) => response.json())
-      .then((data) =>
-        setProducts(
-          data.items.map((item) => ({
-            id: item.product.id,
-            title: item.product.fieldData.name,
-            subtitle: item.product.fieldData.description,
-            price: (item.skus[0]?.fieldData?.price?.value || 0) / 100,
-            image: {
-              uri: item.skus[0]?.fieldData?.["main-image"]?.url,
-            },
-            category:
-              categoryNames[item.product.fieldData.category[0]] ||
-              "onbekende categorie",
-          })),
-        ),
-      )
+      .then((data) => {
+        const mappedProducts = (data.items || []).map((item) => {
+          const fieldData = item.product?.fieldData || {};
+          const skuFieldData = item.skus?.[0]?.fieldData || {};
+
+          return {
+            id: item.product?.id,
+            title: fieldData.name || "Unnamed product",
+            subtitle: fieldData.description || "",
+            price: (skuFieldData.price?.value || 0) / 100,
+            image: skuFieldData["main-image"]?.url
+              ? { uri: skuFieldData["main-image"].url }
+              : undefined,
+            category: getCategoryFromFieldData(fieldData),
+            onSale: Boolean(
+              fieldData.sale ||
+                fieldData.promotion ||
+                fieldData.promoted ||
+                skuFieldData.sale
+            ),
+          };
+        });
+
+        setProducts(mappedProducts);
+      })
       .catch((error) => console.error("Error fetching products:", error));
   }, []);
 
-  const filteredProducts = selectedCategory
-    ? products.filter((product) => product.category === selectedCategory)
-    : products;
+  const availableCategories = useMemo(() => {
+    return [...new Set(products.map((product) => product.category).filter(Boolean))];
+  }, [products]);
+
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      const matchesCategory =
+        !selectedCategory || product.category === selectedCategory;
+      const matchesSearch =
+        !searchQuery ||
+        product.title.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesPromotion = !isEnabled || product.onSale;
+
+      return matchesCategory && matchesSearch && matchesPromotion;
+    });
+  }, [isEnabled, products, searchQuery, selectedCategory]);
 
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Our offer</Text>
-      <TextInput placeholder="Search a product..." style={styles.input} />
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          marginVertical: 12,
-          justifyContent: "space-between",
-        }}
-      >
-        <Text style={{ color: "#fff", marginLeft: 8 }}>
-          Only show promotions
-        </Text>
+
+      <TextInput
+        placeholder="Search a product..."
+        placeholderTextColor="#737373"
+        style={styles.input}
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+      />
+
+      <View style={styles.filterRow}>
+        <Text style={styles.filterLabel}>Only show promotions</Text>
         <Switch
           style={styles.switch}
           trackColor={{ false: "#767577", true: "#81b0ff" }}
@@ -81,21 +160,27 @@ const HomeScreen = ({ navigation }) => {
           value={isEnabled}
         />
       </View>
-      <picker
-        selectedValue={selectedCategory}
-        onValueChange={setSelectedCategory}
-        style={styles.picker}
-      >
-        <picker.Item label="All Categories" value="" />
-        <picker.Item label="Snowboard" value="snowboard" />
-        <picker.Item label="Skii" value="skii" />
-        <picker.Item label="Snowgear" value="snowgear" />
-        <picker.Item label="Jackets" value="jackets" />
-        <picker.Item label="Shoes" value="shoes" />
-      </picker>
+
+      <View style={styles.pickerWrap}>
+        <Picker
+          selectedValue={selectedCategory}
+          onValueChange={setSelectedCategory}
+          dropdownIconColor="#fff"
+          style={styles.picker}
+        >
+          <Picker.Item label="All Categories" value="" />
+          {availableCategories.map((category) => (
+            <Picker.Item
+              key={category}
+              label={CATEGORY_LABELS[category] || category}
+              value={category}
+            />
+          ))}
+        </Picker>
+      </View>
 
       <ScrollView style={styles.container} contentContainerStyle={styles.list}>
-        {products.map((product) => (
+        {filteredProducts.map((product) => (
           <ProductCard
             key={product.id}
             title={product.title}
@@ -105,7 +190,14 @@ const HomeScreen = ({ navigation }) => {
             onPress={() => navigation.navigate("Details", product)}
           />
         ))}
+
+        {filteredProducts.length === 0 ? (
+          <Text style={styles.emptyState}>
+            No products found for this category.
+          </Text>
+        ) : null}
       </ScrollView>
+
       <StatusBar style="auto" />
     </View>
   );
@@ -124,6 +216,16 @@ const styles = StyleSheet.create({
     marginTop: 64,
     marginBottom: 12,
   },
+  filterRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 12,
+    justifyContent: "space-between",
+  },
+  filterLabel: {
+    color: "#fff",
+    marginLeft: 8,
+  },
   list: {
     paddingHorizontal: 12,
     paddingBottom: 24,
@@ -139,9 +241,24 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderColor: "#555",
     borderWidth: 1,
-    color: "#737373",
+    color: "#111",
     paddingVertical: 10,
     paddingHorizontal: 16,
+  },
+  pickerWrap: {
+    borderWidth: 1,
+    borderColor: "#555",
+    backgroundColor: "#111",
+    marginBottom: 12,
+  },
+  picker: {
+    color: "#fff",
+  },
+  emptyState: {
+    color: "#fff",
+    textAlign: "center",
+    width: "100%",
+    marginTop: 24,
   },
 });
 
