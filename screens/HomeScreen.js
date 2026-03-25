@@ -19,6 +19,12 @@ const CATEGORY_ID_MAP = {
   "69aec47adc4d63ec15714677": "snowboard",
   fb1826afcfbfdf2e34b93317390aac07: "jackets",
 };
+const CATEGORY_PREFIX_MAP = {
+  "993e": "shoes",
+  "2940": "snowgear",
+  b22: "ski",
+  "6223": "snowboard",
+};
 
 const CATEGORY_LABELS = {
   snowboard: "Snowboard",
@@ -37,6 +43,14 @@ const normalizeCategory = (value) => {
 
   if (CATEGORY_ID_MAP[normalizedValue]) {
     return CATEGORY_ID_MAP[normalizedValue];
+  }
+
+  const prefixMatch = Object.entries(CATEGORY_PREFIX_MAP).find(([prefix]) =>
+    normalizedValue.startsWith(prefix)
+  );
+
+  if (prefixMatch) {
+    return prefixMatch[1];
   }
 
   if (normalizedValue === "skii") {
