@@ -7,6 +7,7 @@ import {
   ScrollView,
   Switch,
   TextInput,
+  ImageBackground,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import BlogCard from "../components/BlogCard";
@@ -28,7 +29,7 @@ const CATEGORY_PREFIX_MAP = {
 };
 
 const CATEGORY_LABELS = {
-  snowboard: "Snowboard",
+  snowboard: "Snowboarding",
   ski: "Ski",
   snowgear: "SnowGear",
   jackets: "Jackets",
@@ -82,6 +83,10 @@ const getBlogCategory = (fieldData = {}) => {
 
   if (prefixMatch) {
     return prefixMatch[1];
+  }
+
+  if (/^[a-f0-9]{12,}$/.test(normalizedValue)) {
+    return "snowboard";
   }
 
   return normalizeCategory(normalizedValue);
@@ -254,11 +259,23 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Our offer</Text>
+      <ImageBackground
+        source={require("../assets/Homescreen.jpg")}
+        style={styles.hero}
+        imageStyle={styles.heroImage}
+      >
+        <View style={styles.heroOverlay}>
+          <Text style={styles.kicker}>Snowboardshop Yente</Text>
+          <Text style={styles.heading}>Ride the season</Text>
+          <Text style={styles.heroText}>
+            Products and blogs in one clean winter storefront.
+          </Text>
+        </View>
+      </ImageBackground>
 
       <TextInput
         placeholder="Search a product..."
-        placeholderTextColor="#737373"
+        placeholderTextColor="#8b8b8b"
         style={styles.input}
         value={searchQuery}
         onChangeText={setSearchQuery}
@@ -268,8 +285,8 @@ const HomeScreen = ({ navigation }) => {
         <Text style={styles.filterLabel}>Only show promotions</Text>
         <Switch
           style={styles.switch}
-          trackColor={{ false: "#767577", true: "#81b0ff" }}
-          thumbColor={isEnabled ? "#81b0ff" : "#f4f3f4"}
+          trackColor={{ false: "#4b4b4b", true: "#d6d0c4" }}
+          thumbColor={isEnabled ? "#ffffff" : "#d9d9d9"}
           ios_backgroundColor="#3e3e3e"
           onValueChange={toggleSwitch}
           value={isEnabled}
@@ -365,15 +382,40 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: "#050505",
+  },
+  hero: {
+    height: 240,
+    marginBottom: 18,
+    justifyContent: "flex-end",
+  },
+  heroImage: {
+    borderRadius: 0,
+  },
+  heroOverlay: {
+    backgroundColor: "rgba(0, 0, 0, 0.42)",
+    paddingHorizontal: 18,
+    paddingVertical: 24,
+  },
+  kicker: {
+    color: "#d6d0c4",
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 2,
+    textTransform: "uppercase",
+    marginBottom: 8,
   },
   heading: {
-    color: "#fff",
-    fontSize: 24,
-    fontWeight: "700",
-    textAlign: "center",
-    marginTop: 64,
-    marginBottom: 12,
+    color: "#f7f5f2",
+    fontSize: 34,
+    fontWeight: "800",
+    marginBottom: 8,
+  },
+  heroText: {
+    color: "#d9d4cb",
+    fontSize: 14,
+    lineHeight: 21,
+    maxWidth: 260,
   },
   filterRow: {
     flexDirection: "row",
@@ -382,12 +424,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   filterLabel: {
-    color: "#fff",
+    color: "#f2f0eb",
     marginLeft: 8,
   },
   list: {
     paddingHorizontal: 12,
-    paddingBottom: 24,
+    paddingBottom: 28,
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
@@ -397,49 +439,54 @@ const styles = StyleSheet.create({
   },
   input: {
     marginVertical: 12,
-    backgroundColor: "#fff",
-    borderColor: "#555",
+    backgroundColor: "#f1ece4",
+    borderColor: "#2c2c2c",
     borderWidth: 1,
+    borderRadius: 14,
     color: "#111",
     paddingVertical: 10,
     paddingHorizontal: 16,
   },
   pickerWrap: {
     borderWidth: 1,
-    borderColor: "#555",
-    backgroundColor: "#111",
+    borderColor: "#2c2c2c",
+    borderRadius: 14,
+    backgroundColor: "#121212",
     marginBottom: 12,
+    overflow: "hidden",
   },
   pickerWrapWide: {
     width: "100%",
     borderWidth: 1,
-    borderColor: "#555",
-    backgroundColor: "#111",
+    borderColor: "#2c2c2c",
+    borderRadius: 14,
+    backgroundColor: "#121212",
     marginBottom: 12,
     marginTop: 8,
+    overflow: "hidden",
   },
   picker: {
-    color: "#fff",
+    color: "#f7f5f2",
   },
   sectionHeading: {
-    color: "#fff",
-    fontSize: 24,
+    color: "#f7f5f2",
+    fontSize: 26,
     fontWeight: "700",
     width: "100%",
-    marginTop: 20,
+    marginTop: 26,
     marginBottom: 12,
   },
   blogList: {
     width: "100%",
   },
   emptyState: {
-    color: "#fff",
+    color: "#d3cec4",
     textAlign: "center",
     width: "100%",
     marginTop: 24,
   },
   notice: {
-    color: "#ffb86b",
+    color: "#d6d0c4",
     marginBottom: 12,
     paddingHorizontal: 8,
     textAlign: "center",

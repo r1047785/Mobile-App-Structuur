@@ -13,21 +13,22 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
-          headerStyle: { backgroundColor: "#07111f" },
-          headerTintColor: "#f5fbff",
+          headerStyle: { backgroundColor: "#050505" },
+          headerTintColor: "#f7f5f2",
           headerShadowVisible: false,
-          contentStyle: { backgroundColor: "#07111f" },
+          headerTitleStyle: { fontWeight: "700" },
+          contentStyle: { backgroundColor: "#050505" },
         }}
       >
         <Stack.Screen
           name="Home"
           component={HomeScreen}
-          options={{ title: "Volt Market" }}
+          options={{ title: "Snow Society" }}
         />
         <Stack.Screen
           name="Details"
           component={ProductDetail}
-          options={{ title: "Device Details" }}
+          options={{ title: "Product Details" }}
         />
         <Stack.Screen
           name="BlogDetail"

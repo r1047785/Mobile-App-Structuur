@@ -28,24 +28,24 @@ export default function BlogCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#0c1b30",
-    borderRadius: 22,
+    backgroundColor: "#111111",
+    borderRadius: 24,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#173250",
-    marginBottom: 16,
+    borderColor: "#262626",
+    marginBottom: 18,
   },
   image: {
     width: "100%",
     height: 180,
     resizeMode: "cover",
-    backgroundColor: "#102139",
+    backgroundColor: "#1a1a1a",
   },
   content: {
     padding: 14,
   },
   tag: {
-    color: "#57d1ff",
+    color: "#d6d0c4",
     fontSize: 11,
     fontWeight: "800",
     textTransform: "uppercase",
@@ -53,13 +53,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   title: {
-    color: "#f5fbff",
+    color: "#f7f5f2",
     fontSize: 18,
     fontWeight: "800",
     marginBottom: 8,
   },
   excerpt: {
-    color: "#90a4bf",
+    color: "#c6c1b8",
     fontSize: 14,
     lineHeight: 20,
   },

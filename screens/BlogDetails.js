@@ -38,18 +38,18 @@ const BlogDetail = ({ route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#07111f",
+    backgroundColor: "#050505",
   },
   content: {
     padding: 18,
     paddingBottom: 40,
   },
   hero: {
-    backgroundColor: "#0c1b30",
+    backgroundColor: "#111111",
     borderRadius: 24,
     padding: 20,
     borderWidth: 1,
-    borderColor: "#173250",
+    borderColor: "#262626",
     marginBottom: 18,
   },
   image: {
@@ -58,10 +58,10 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     marginBottom: 18,
     resizeMode: "cover",
-    backgroundColor: "#0c1b30",
+    backgroundColor: "#111111",
   },
   tag: {
-    color: "#57d1ff",
+    color: "#d6d0c4",
     fontSize: 12,
     fontWeight: "800",
     textTransform: "uppercase",
@@ -69,31 +69,31 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   title: {
-    color: "#f5fbff",
+    color: "#f7f5f2",
     fontSize: 30,
     fontWeight: "900",
     marginBottom: 10,
   },
   excerpt: {
-    color: "#90a4bf",
+    color: "#c6c1b8",
     fontSize: 15,
     lineHeight: 22,
   },
   article: {
-    backgroundColor: "#0c1b30",
+    backgroundColor: "#111111",
     borderRadius: 24,
     padding: 20,
     borderWidth: 1,
-    borderColor: "#173250",
+    borderColor: "#262626",
   },
   heading: {
-    color: "#f5fbff",
+    color: "#f7f5f2",
     fontSize: 18,
     fontWeight: "800",
     marginBottom: 8,
   },
   paragraph: {
-    color: "#90a4bf",
+    color: "#c6c1b8",
     fontSize: 15,
     lineHeight: 24,
     marginBottom: 18,

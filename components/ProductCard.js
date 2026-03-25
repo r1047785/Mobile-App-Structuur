@@ -60,20 +60,20 @@ export default function ProductCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#0c1b30",
-    borderRadius: 22,
+    backgroundColor: "#111111",
+    borderRadius: 24,
     width: "48%",
     marginBottom: 18,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#173250",
+    borderColor: "#262626",
   },
   visualWrap: {
-    backgroundColor: "#081423",
-    padding: 12,
+    backgroundColor: "#0b0b0b",
+    padding: 10,
   },
   visualTag: {
-    color: "#57d1ff",
+    color: "#d6d0c4",
     fontSize: 11,
     fontWeight: "800",
     letterSpacing: 1,
@@ -81,16 +81,16 @@ const styles = StyleSheet.create({
   },
   image: {
     width: "100%",
-    height: 130,
+    height: 150,
     resizeMode: "cover",
-    borderRadius: 16,
-    backgroundColor: "#102139",
+    borderRadius: 18,
+    backgroundColor: "#1a1a1a",
   },
   content: {
     padding: 14,
   },
   overline: {
-    color: "#7b94b5",
+    color: "#9d988f",
     fontSize: 11,
     textTransform: "uppercase",
     letterSpacing: 1,
@@ -99,29 +99,29 @@ const styles = StyleSheet.create({
   title: {
     fontWeight: "800",
     fontSize: 17,
-    color: "#f5fbff",
+    color: "#f7f5f2",
     marginBottom: 6,
   },
   description: {
-    color: "#90a4bf",
+    color: "#c6c1b8",
     fontSize: 13,
     lineHeight: 18,
     minHeight: 54,
     marginBottom: 10,
   },
   price: {
-    color: "#57d1ff",
+    color: "#ffffff",
     fontWeight: "800",
     fontSize: 16,
     marginBottom: 12,
   },
   button: {
-    backgroundColor: "#57d1ff",
+    backgroundColor: "#f1ece4",
     paddingVertical: 11,
-    borderRadius: 12,
+    borderRadius: 14,
   },
   buttonText: {
-    color: "#07111f",
+    color: "#111111",
     textAlign: "center",
     fontWeight: "800",
     fontSize: 13,
