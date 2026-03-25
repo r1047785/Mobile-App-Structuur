@@ -76,11 +76,12 @@ const getCategoryFromFieldData = (fieldData = {}) => {
   return "";
 };
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = ({ navigation, route }) => {
   const [isEnabled, setIsEnabled] = useState(false);
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState(route.params?.fallbackProducts || []);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [loadError, setLoadError] = useState("");
 
   const toggleSwitch = () => setIsEnabled((current) => !current);
 
@@ -91,7 +92,13 @@ const HomeScreen = ({ navigation }) => {
           "Bearer 15f5cc4a3d900c636f9056e192ae2d4d1faac7747ed954c777cd936c08fa9060",
       },
     })
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Webflow request failed: ${response.status}`);
+        }
+
+        return response.json();
+      })
       .then((data) => {
         const mappedProducts = (data.items || []).map((item) => {
           const fieldData = item.product?.fieldData || {};
@@ -115,10 +122,20 @@ const HomeScreen = ({ navigation }) => {
           };
         });
 
-        setProducts(mappedProducts);
+        if (mappedProducts.length > 0) {
+          setProducts(mappedProducts);
+          setLoadError("");
+        } else {
+          setLoadError("Webflow returned no products, fallback data is shown.");
+        }
       })
-      .catch((error) => console.error("Error fetching products:", error));
-  }, []);
+      .catch((error) => {
+        console.error("Error fetching products:", error);
+        setLoadError(
+          "Webflow products could not be loaded. Check your site ID and API token."
+        );
+      });
+  }, [route.params?.fallbackProducts]);
 
   const availableCategories = useMemo(() => {
     return [...new Set(products.map((product) => product.category).filter(Boolean))];
@@ -178,6 +195,8 @@ const HomeScreen = ({ navigation }) => {
           ))}
         </Picker>
       </View>
+
+      {loadError ? <Text style={styles.notice}>{loadError}</Text> : null}
 
       <ScrollView style={styles.container} contentContainerStyle={styles.list}>
         {filteredProducts.map((product) => (
@@ -259,6 +278,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
     width: "100%",
     marginTop: 24,
+  },
+  notice: {
+    color: "#ffb86b",
+    marginBottom: 12,
+    paddingHorizontal: 8,
+    textAlign: "center",
   },
 });
 
