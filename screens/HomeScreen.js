@@ -9,11 +9,22 @@ import {
   TextInput,
 } from "react-native";
 import ProductCard from "../components/ProductCard";
+import BlogCard from "../components/BlogCard";
+import { Picker } from "@react-native-picker/picker";
+
+const categoryNames = {
+  "69b08ea68256760231b6697c": "jackets",
+  "69b08bd147e3f7afe5f40953": "shoes",
+  "69b0772f82bad9c4b0615bf2": "snowgear",
+  "69b08ea68256760231b6697f": "skii",
+  "69aec47adc4d63ec15714677": "snowboard",
+};
 
 const HomeScreen = ({ navigation }) => {
   const [isEnabled, setIsEnabled] = useState(false);
   const [products, setProducts] = useState([]);
   const toggleSwitch = () => setIsEnabled(!isEnabled);
+  const [selectedCategory, setSelectedCategory] = useState("");
 
   useEffect(() => {
     fetch("https://api.webflow.com/v2/sites/:site_id/products", {
@@ -33,11 +44,19 @@ const HomeScreen = ({ navigation }) => {
             image: {
               uri: item.skus[0]?.fieldData?.["main-image"]?.url,
             },
+            category:
+              categoryNames[item.product.fieldData.category[0]] ||
+              "onbekende categorie",
           })),
         ),
       )
       .catch((error) => console.error("Error fetching products:", error));
   }, []);
+
+  const filteredProducts = selectedCategory
+    ? products.filter((product) => product.category === selectedCategory)
+    : products;
+
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Our offer</Text>
@@ -62,6 +81,19 @@ const HomeScreen = ({ navigation }) => {
           value={isEnabled}
         />
       </View>
+      <picker
+        selectedValue={selectedCategory}
+        onValueChange={setSelectedCategory}
+        style={styles.picker}
+      >
+        <picker.Item label="All Categories" value="" />
+        <picker.Item label="Snowboard" value="snowboard" />
+        <picker.Item label="Skii" value="skii" />
+        <picker.Item label="Snowgear" value="snowgear" />
+        <picker.Item label="Jackets" value="jackets" />
+        <picker.Item label="Shoes" value="shoes" />
+      </picker>
+
       <ScrollView style={styles.container} contentContainerStyle={styles.list}>
         {products.map((product) => (
           <ProductCard
