@@ -258,7 +258,11 @@ const HomeScreen = ({ navigation }) => {
   }, [blogs, searchQuery, selectedBlogCategory]);
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.screenContent}
+      showsVerticalScrollIndicator={false}
+    >
       <ImageBackground
         source={require("../assets/Homescreen.jpg")}
         style={styles.hero}
@@ -273,47 +277,48 @@ const HomeScreen = ({ navigation }) => {
         </View>
       </ImageBackground>
 
-      <TextInput
-        placeholder="Search a product..."
-        placeholderTextColor="#8b8b8b"
-        style={styles.input}
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-      />
-
-      <View style={styles.filterRow}>
-        <Text style={styles.filterLabel}>Only show promotions</Text>
-        <Switch
-          style={styles.switch}
-          trackColor={{ false: "#4b4b4b", true: "#d6d0c4" }}
-          thumbColor={isEnabled ? "#ffffff" : "#d9d9d9"}
-          ios_backgroundColor="#3e3e3e"
-          onValueChange={toggleSwitch}
-          value={isEnabled}
+      <View style={styles.pagePadding}>
+        <TextInput
+          placeholder="Search a product..."
+          placeholderTextColor="#8b8b8b"
+          style={styles.input}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
         />
-      </View>
 
-      <View style={styles.pickerWrap}>
-        <Picker
-          selectedValue={selectedCategory}
-          onValueChange={setSelectedCategory}
-          dropdownIconColor="#fff"
-          style={styles.picker}
-        >
-          <Picker.Item label="All Categories" value="" />
-          {availableCategories.map((category) => (
-            <Picker.Item
-              key={category}
-              label={CATEGORY_LABELS[category] || category}
-              value={category}
-            />
-          ))}
-        </Picker>
-      </View>
+        <View style={styles.filterRow}>
+          <Text style={styles.filterLabel}>Only show promotions</Text>
+          <Switch
+            style={styles.switch}
+            trackColor={{ false: "#4b4b4b", true: "#d6d0c4" }}
+            thumbColor={isEnabled ? "#ffffff" : "#d9d9d9"}
+            ios_backgroundColor="#3e3e3e"
+            onValueChange={toggleSwitch}
+            value={isEnabled}
+          />
+        </View>
 
-      {loadError ? <Text style={styles.notice}>{loadError}</Text> : null}
+        <View style={styles.pickerWrap}>
+          <Picker
+            selectedValue={selectedCategory}
+            onValueChange={setSelectedCategory}
+            dropdownIconColor="#fff"
+            style={styles.picker}
+          >
+            <Picker.Item label="All Categories" value="" />
+            {availableCategories.map((category) => (
+              <Picker.Item
+                key={category}
+                label={CATEGORY_LABELS[category] || category}
+                value={category}
+              />
+            ))}
+          </Picker>
+        </View>
 
-      <ScrollView style={styles.container} contentContainerStyle={styles.list}>
+        {loadError ? <Text style={styles.notice}>{loadError}</Text> : null}
+
+        <View style={styles.list}>
         {filteredProducts.map((product) => (
           <ProductCard
             key={product.id}
@@ -372,10 +377,11 @@ const HomeScreen = ({ navigation }) => {
             No blogs found for this category.
           </Text>
         ) : null}
-      </ScrollView>
+        </View>
+      </View>
 
       <StatusBar style="auto" />
-    </View>
+    </ScrollView>
   );
 };
 
@@ -384,9 +390,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#050505",
   },
+  screenContent: {
+    paddingBottom: 32,
+  },
   hero: {
     height: 240,
-    marginBottom: 18,
     justifyContent: "flex-end",
   },
   heroImage: {
@@ -396,6 +404,10 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.42)",
     paddingHorizontal: 18,
     paddingVertical: 24,
+  },
+  pagePadding: {
+    paddingHorizontal: 12,
+    paddingTop: 18,
   },
   kicker: {
     color: "#d6d0c4",
@@ -428,7 +440,6 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   list: {
-    paddingHorizontal: 12,
     paddingBottom: 28,
     flexDirection: "row",
     flexWrap: "wrap",
