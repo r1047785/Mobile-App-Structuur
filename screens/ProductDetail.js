@@ -12,13 +12,17 @@ import {
 const ProductDetail = ({ route, navigation }) => {
   const { product } = route.params || {};
   const [quantity, setQuantity] = useState(1);
+  const numericPrice =
+    typeof product?.price === "number"
+      ? product.price
+      : Number.parseFloat(String(product?.price || "0").replace(/[^\d.,]/g, "").replace(",", ".")) ||
+        0;
   const categoryLabel = product?.category
     ? product.category.charAt(0).toUpperCase() + product.category.slice(1)
     : "Product";
   const formattedPrice =
-    typeof product?.price === "number"
-      ? `EUR ${product.price.toFixed(2)}`
-      : product?.price || "EUR 199";
+    `EUR ${numericPrice.toFixed(2)}`;
+  const totalPrice = `EUR ${(numericPrice * quantity).toFixed(2)}`;
 
   const decreaseQuantity = () =>
     setQuantity((current) => Math.max(1, current - 1));
@@ -76,8 +80,8 @@ const ProductDetail = ({ route, navigation }) => {
             <Text style={styles.statValue}>{categoryLabel}</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Aantal</Text>
-            <Text style={styles.statValue}>{quantity}</Text>
+            <Text style={styles.statLabel}>Totaalprijs</Text>
+            <Text style={styles.statValue}>{totalPrice}</Text>
           </View>
         </View>
 

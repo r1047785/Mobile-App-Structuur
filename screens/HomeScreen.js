@@ -8,8 +8,8 @@ import {
   Switch,
   TextInput,
   ImageBackground,
+  Pressable,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
 import BlogCard from "../components/BlogCard";
 import ProductCard from "../components/ProductCard";
 
@@ -38,6 +38,17 @@ const CATEGORY_LABELS = {
 const BLOG_CATEGORY_PREFIX_MAP = {
   "50c6": "ski",
 };
+const BLOG_SORT_OPTIONS = [
+  { key: "newest", label: "Newest" },
+  { key: "oldest", label: "Oldest" },
+  { key: "az", label: "A-Z" },
+];
+const PRODUCT_SORT_OPTIONS = [
+  { key: "featured", label: "Featured" },
+  { key: "price-low", label: "Price Low" },
+  { key: "price-high", label: "Price High" },
+  { key: "az", label: "A-Z" },
+];
 
 const normalizeCategory = (value) => {
   if (!value) {
@@ -126,7 +137,9 @@ const HomeScreen = ({ navigation }) => {
   const [blogs, setBlogs] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedProductSort, setSelectedProductSort] = useState("featured");
   const [selectedBlogCategory, setSelectedBlogCategory] = useState("");
+  const [selectedBlogSort, setSelectedBlogSort] = useState("newest");
   const [loadError, setLoadError] = useState("");
   const [blogLoadError, setBlogLoadError] = useState("");
 
@@ -154,11 +167,18 @@ const HomeScreen = ({ navigation }) => {
           return {
             id: item.product?.id,
             title: fieldData.name || "Unnamed product",
-            subtitle: fieldData.description || "",
+            subtitle:
+              fieldData.description ||
+              fieldData["discription-for-item"] ||
+              "",
             price: (skuFieldData.price?.value || 0) / 100,
             image: skuFieldData["main-image"]?.url
               ? { uri: skuFieldData["main-image"].url }
               : undefined,
+            details:
+              fieldData["discription-for-item"] ||
+              fieldData.description ||
+              "",
             category: getCategoryFromFieldData(fieldData),
             onSale: Boolean(
               fieldData.sale ||
@@ -213,6 +233,8 @@ const HomeScreen = ({ navigation }) => {
                 : undefined,
             category: getBlogCategory(fieldData),
             body: fieldData["post-body"] || "",
+            featured: Boolean(fieldData.featured),
+            lastPublished: item.lastPublished || item.lastUpdated || item.createdOn,
           };
         });
 
@@ -234,7 +256,7 @@ const HomeScreen = ({ navigation }) => {
   }, [blogs]);
 
   const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
+    const filtered = products.filter((product) => {
       const matchesCategory =
         !selectedCategory || product.category === selectedCategory;
       const matchesSearch =
@@ -244,10 +266,26 @@ const HomeScreen = ({ navigation }) => {
 
       return matchesCategory && matchesSearch && matchesPromotion;
     });
-  }, [isEnabled, products, searchQuery, selectedCategory]);
+
+    return [...filtered].sort((firstProduct, secondProduct) => {
+      if (selectedProductSort === "price-low") {
+        return firstProduct.price - secondProduct.price;
+      }
+
+      if (selectedProductSort === "price-high") {
+        return secondProduct.price - firstProduct.price;
+      }
+
+      if (selectedProductSort === "az") {
+        return firstProduct.title.localeCompare(secondProduct.title);
+      }
+
+      return Number(secondProduct.onSale) - Number(firstProduct.onSale);
+    });
+  }, [isEnabled, products, searchQuery, selectedCategory, selectedProductSort]);
 
   const filteredBlogs = useMemo(() => {
-    return blogs.filter((blog) => {
+    const filtered = blogs.filter((blog) => {
       const matchesCategory =
         !selectedBlogCategory || blog.category === selectedBlogCategory;
       const matchesSearch =
@@ -255,7 +293,25 @@ const HomeScreen = ({ navigation }) => {
 
       return matchesCategory && matchesSearch;
     });
-  }, [blogs, searchQuery, selectedBlogCategory]);
+
+    return [...filtered].sort((firstBlog, secondBlog) => {
+      if (selectedBlogSort === "oldest") {
+        return (
+          new Date(firstBlog.lastPublished).getTime() -
+          new Date(secondBlog.lastPublished).getTime()
+        );
+      }
+
+      if (selectedBlogSort === "az") {
+        return firstBlog.title.localeCompare(secondBlog.title);
+      }
+
+      return (
+        new Date(secondBlog.lastPublished).getTime() -
+        new Date(firstBlog.lastPublished).getTime()
+      );
+    });
+  }, [blogs, searchQuery, selectedBlogCategory, selectedBlogSort]);
 
   return (
     <ScrollView
@@ -298,85 +354,194 @@ const HomeScreen = ({ navigation }) => {
           />
         </View>
 
-        <View style={styles.pickerWrap}>
-          <Picker
-            selectedValue={selectedCategory}
-            onValueChange={setSelectedCategory}
-            dropdownIconColor="#fff"
-            style={styles.picker}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoryRow}
+          style={styles.categoryScroll}
+        >
+          <Pressable
+            style={[
+              styles.categoryChip,
+              selectedCategory === "" && styles.categoryChipActive,
+            ]}
+            onPress={() => setSelectedCategory("")}
           >
-            <Picker.Item label="All Categories" value="" />
-            {availableCategories.map((category) => (
-              <Picker.Item
-                key={category}
-                label={CATEGORY_LABELS[category] || category}
-                value={category}
-              />
-            ))}
-          </Picker>
-        </View>
+            <Text
+              style={[
+                styles.categoryChipText,
+                selectedCategory === "" && styles.categoryChipTextActive,
+              ]}
+            >
+              All Categories
+            </Text>
+          </Pressable>
+          {availableCategories.map((category) => (
+            <Pressable
+              key={category}
+              style={[
+                styles.categoryChip,
+                selectedCategory === category && styles.categoryChipActive,
+              ]}
+              onPress={() => setSelectedCategory(category)}
+            >
+              <Text
+                style={[
+                  styles.categoryChipText,
+                  selectedCategory === category && styles.categoryChipTextActive,
+                ]}
+              >
+                {CATEGORY_LABELS[category] || category}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.sortRow}
+          style={styles.categoryScroll}
+        >
+          {PRODUCT_SORT_OPTIONS.map((option) => (
+            <Pressable
+              key={option.key}
+              style={[
+                styles.sortChip,
+                selectedProductSort === option.key && styles.sortChipActive,
+              ]}
+              onPress={() => setSelectedProductSort(option.key)}
+            >
+              <Text
+                style={[
+                  styles.sortChipText,
+                  selectedProductSort === option.key &&
+                    styles.sortChipTextActive,
+                ]}
+              >
+                {option.label}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
 
         {loadError ? <Text style={styles.notice}>{loadError}</Text> : null}
 
         <View style={styles.list}>
-        {filteredProducts.map((product) => (
-          <ProductCard
-            key={product.id}
-            title={product.title}
-            description={product.subtitle}
-            price={product.price}
-            image={product.image}
-            category={product.category}
-            onPress={() => navigation.navigate("Details", product)}
-          />
-        ))}
-
-        {filteredProducts.length === 0 ? (
-          <Text style={styles.emptyState}>
-            No products found for this category.
-          </Text>
-        ) : null}
-
-        <Text style={styles.sectionHeading}>Latest blogs</Text>
-
-        <View style={styles.pickerWrapWide}>
-          <Picker
-            selectedValue={selectedBlogCategory}
-            onValueChange={setSelectedBlogCategory}
-            dropdownIconColor="#fff"
-            style={styles.picker}
-          >
-            <Picker.Item label="All Blog Categories" value="" />
-            {availableBlogCategories.map((category) => (
-              <Picker.Item
-                key={category}
-                label={CATEGORY_LABELS[category] || category}
-                value={category}
-              />
-            ))}
-          </Picker>
-        </View>
-
-        {blogLoadError ? <Text style={styles.notice}>{blogLoadError}</Text> : null}
-
-        <View style={styles.blogList}>
-          {filteredBlogs.map((blog) => (
-            <BlogCard
-              key={blog.id}
-              title={blog.title}
-              excerpt={blog.excerpt}
-              image={blog.image}
-              category={CATEGORY_LABELS[blog.category] || blog.category}
-              onPress={() => navigation.navigate("BlogDetail", { blog })}
+          {filteredProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              title={product.title}
+              description={product.subtitle}
+              price={product.price}
+              image={product.image}
+              details={product.details}
+              category={product.category}
+              onPress={() => navigation.navigate("Details", { product })}
             />
           ))}
-        </View>
 
-        {filteredBlogs.length === 0 ? (
-          <Text style={styles.emptyState}>
-            No blogs found for this category.
-          </Text>
-        ) : null}
+          {filteredProducts.length === 0 ? (
+            <Text style={styles.emptyState}>
+              No products found for this category.
+            </Text>
+          ) : null}
+
+          <Text style={styles.sectionHeading}>Latest blogs</Text>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoryRow}
+            style={styles.categoryScroll}
+          >
+            <Pressable
+              style={[
+                styles.categoryChip,
+                selectedBlogCategory === "" && styles.categoryChipActive,
+              ]}
+              onPress={() => setSelectedBlogCategory("")}
+            >
+              <Text
+                style={[
+                  styles.categoryChipText,
+                  selectedBlogCategory === "" && styles.categoryChipTextActive,
+                ]}
+              >
+                All Blog Categories
+              </Text>
+            </Pressable>
+            {availableBlogCategories.map((category) => (
+              <Pressable
+                key={category}
+                style={[
+                  styles.categoryChip,
+                  selectedBlogCategory === category && styles.categoryChipActive,
+                ]}
+                onPress={() => setSelectedBlogCategory(category)}
+              >
+                <Text
+                  style={[
+                    styles.categoryChipText,
+                    selectedBlogCategory === category &&
+                      styles.categoryChipTextActive,
+                  ]}
+                >
+                  {CATEGORY_LABELS[category] || category}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.sortRow}
+            style={styles.categoryScroll}
+          >
+            {BLOG_SORT_OPTIONS.map((option) => (
+              <Pressable
+                key={option.key}
+                style={[
+                  styles.sortChip,
+                  selectedBlogSort === option.key && styles.sortChipActive,
+                ]}
+                onPress={() => setSelectedBlogSort(option.key)}
+              >
+                <Text
+                  style={[
+                    styles.sortChipText,
+                    selectedBlogSort === option.key && styles.sortChipTextActive,
+                  ]}
+                >
+                  {option.label}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+
+          {blogLoadError ? (
+            <Text style={styles.notice}>{blogLoadError}</Text>
+          ) : null}
+
+          <View style={styles.blogList}>
+            {filteredBlogs.map((blog) => (
+              <BlogCard
+                key={blog.id}
+                title={blog.title}
+                excerpt={blog.excerpt}
+                image={blog.image}
+                category={CATEGORY_LABELS[blog.category] || blog.category}
+                onPress={() => navigation.navigate("BlogDetail", { blog })}
+              />
+            ))}
+          </View>
+
+          {filteredBlogs.length === 0 ? (
+            <Text style={styles.emptyState}>
+              No blogs found for this category.
+            </Text>
+          ) : null}
         </View>
       </View>
 
@@ -450,34 +615,65 @@ const styles = StyleSheet.create({
   },
   input: {
     marginVertical: 12,
-    backgroundColor: "#f1ece4",
-    borderColor: "#2c2c2c",
+    backgroundColor: "#f6f1e8",
+    borderColor: "#6c665e",
     borderWidth: 1,
     borderRadius: 14,
     color: "#111",
     paddingVertical: 10,
     paddingHorizontal: 16,
   },
-  pickerWrap: {
-    borderWidth: 1,
-    borderColor: "#2c2c2c",
-    borderRadius: 14,
-    backgroundColor: "#121212",
+  categoryScroll: {
     marginBottom: 12,
-    overflow: "hidden",
   },
-  pickerWrapWide: {
-    width: "100%",
+  categoryRow: {
+    paddingRight: 12,
+    gap: 10,
+  },
+  sortRow: {
+    paddingRight: 12,
+    gap: 10,
+    marginBottom: 14,
+  },
+  categoryChip: {
+    backgroundColor: "#ede7de",
     borderWidth: 1,
-    borderColor: "#2c2c2c",
-    borderRadius: 14,
-    backgroundColor: "#121212",
-    marginBottom: 12,
-    marginTop: 8,
-    overflow: "hidden",
+    borderColor: "#c8bfb2",
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
   },
-  picker: {
+  categoryChipActive: {
+    backgroundColor: "#1c1c1c",
+    borderColor: "#f6f1e8",
+  },
+  categoryChipText: {
+    color: "#171717",
+    fontWeight: "700",
+    fontSize: 14,
+  },
+  categoryChipTextActive: {
     color: "#f7f5f2",
+  },
+  sortChip: {
+    backgroundColor: "#141414",
+    borderWidth: 1,
+    borderColor: "#4b4b4b",
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+  },
+  sortChipActive: {
+    backgroundColor: "#f6f1e8",
+    borderColor: "#f6f1e8",
+  },
+  sortChipText: {
+    color: "#f3eee6",
+    fontWeight: "700",
+    fontSize: 13,
+  },
+  sortChipTextActive: {
+    color: "#111111",
   },
   sectionHeading: {
     color: "#f7f5f2",
