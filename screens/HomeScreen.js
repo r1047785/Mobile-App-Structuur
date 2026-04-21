@@ -167,6 +167,10 @@ const HomeScreen = ({ navigation }) => {
           return {
             id: item.product?.id,
             title: fieldData.name || "Unnamed product",
+            description:
+              fieldData.description ||
+              fieldData["discription-for-item"] ||
+              "",
             subtitle:
               fieldData.description ||
               fieldData["discription-for-item"] ||
@@ -432,7 +436,7 @@ const HomeScreen = ({ navigation }) => {
             <ProductCard
               key={product.id}
               title={product.title}
-              description={product.subtitle}
+              description={product.description}
               price={product.price}
               image={product.image}
               details={product.details}

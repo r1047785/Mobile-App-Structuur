@@ -48,7 +48,9 @@ const ProductDetail = ({ route, navigation }) => {
 
         <Text style={styles.sectionTitle}>Beschrijving</Text>
         <Text style={styles.description}>
-          {product?.description || "Productbeschrijving niet beschikbaar."}
+          {product?.description ||
+            product?.subtitle ||
+            "Productbeschrijving niet beschikbaar."}
         </Text>
 
         <View style={styles.infoBox}>
