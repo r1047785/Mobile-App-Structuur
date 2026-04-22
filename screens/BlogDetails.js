@@ -2,11 +2,29 @@ import React from "react";
 import { StatusBar } from "expo-status-bar";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 
+const getReadableBody = (body = "") => {
+  return body
+    .replace(/<p>\s*<\/p>/gi, "\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+};
+
 const BlogDetail = ({ route }) => {
   const { blog } = route.params || {};
   const categoryLabel = blog?.category
     ? blog.category.charAt(0).toUpperCase() + blog.category.slice(1)
     : "Blog";
+  const bodyParagraphs = getReadableBody(blog?.body)
+    .split("\n\n")
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -26,10 +44,18 @@ const BlogDetail = ({ route }) => {
       />
 
       <View style={styles.article}>
-        <Text style={styles.heading}>Korte inhoud</Text>
-        <Text style={styles.paragraph}>
-          {blog?.excerpt || "Geen extra samenvatting beschikbaar."}
-        </Text>
+        <Text style={styles.heading}>Blog tekst</Text>
+        {bodyParagraphs.length > 0 ? (
+          bodyParagraphs.map((paragraph, index) => (
+            <Text key={`${blog?.id || "blog"}-${index}`} style={styles.paragraph}>
+              {paragraph}
+            </Text>
+          ))
+        ) : (
+          <Text style={styles.paragraph}>
+            {blog?.excerpt || "Geen extra blogtekst beschikbaar."}
+          </Text>
+        )}
       </View>
     </ScrollView>
   );
